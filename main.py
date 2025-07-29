@@ -99,7 +99,7 @@ data = load_transformed_dataset()
 dataloader = DataLoader(data, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
 
 
-class Block(nn.Module):
+class UNetConvBlock(nn.Module):
     def __init__(self, in_ch, out_ch, time_emb_dim, up=False):
         super().__init__()
         self.time_mlp =  nn.Linear(time_emb_dim, out_ch)
@@ -143,7 +143,7 @@ class SinusoidalPositionEmbeddings(nn.Module):
         return embeddings
 
 
-class SimpleUnet(nn.Module):
+class Unet(nn.Module):
     def __init__(self):
         super().__init__()
         image_channels = 3
@@ -162,11 +162,11 @@ class SimpleUnet(nn.Module):
         self.conv0 = nn.Conv2d(image_channels, down_channels[0], 3, padding=1)
 
         # Downsample
-        self.downs = nn.ModuleList([Block(down_channels[i], down_channels[i+1], \
+        self.downs = nn.ModuleList([UNetConvBlock(down_channels[i], down_channels[i+1], \
                                     time_emb_dim) \
                     for i in range(len(down_channels)-1)])
         # Upsample
-        self.ups = nn.ModuleList([Block(up_channels[i], up_channels[i+1], \
+        self.ups = nn.ModuleList([UNetConvBlock(up_channels[i], up_channels[i+1], \
                                         time_emb_dim, up=True) \
                     for i in range(len(up_channels)-1)])
         
@@ -235,7 +235,7 @@ def sample_plot_image(model, device):
 
    
 def training(checkpoint_path=None):
-    model = SimpleUnet()
+    model = Unet()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
 
